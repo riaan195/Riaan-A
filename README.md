@@ -1,0 +1,1 @@
+I just wanted to show how lawn care games are, because once you do this in real life you now do know how to do this because it get can bad quickly if you don't know what to do. If you accidentally spray weed killer on a plant you like then the plant will die. This is why I created this game:).
