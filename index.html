@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lawn Care Owner Simulator</title>
+  <style>
+    :root {
+      --bg: #f3faf2;
+      --card: #ffffff;
+      --ink: #1c2b1f;
+      --accent: #3d8b37;
+      --accent-2: #246627;
+      --muted: #64756a;
+      --warn: #ca8a04;
+      --danger: #b91c1c;
+      --line: #d4e7d5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(120deg, #edf9ef, #f8fffa);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 340px 1fr;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: 0 4px 20px rgba(50, 90, 60, 0.07);
+    }
+
+    h1, h2, h3 { margin: 0 0 0.7rem; }
+    h1 { font-size: 1.45rem; }
+    h2 { font-size: 1.1rem; }
+
+    .stats {
+      display: grid;
+      gap: 0.6rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat {
+      background: #f5fbf6;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.65rem;
+    }
+
+    .label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.15rem;
+    }
+
+    .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 0.6rem 0.7rem;
+      cursor: pointer;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent);
+      margin-top: 0.5rem;
+    }
+
+    button:hover { background: var(--accent-2); }
+    button.secondary { background: #4b5563; }
+    button.secondary:hover { background: #374151; }
+    button.warn { background: var(--warn); }
+    button.warn:hover { background: #a16207; }
+
+    .job-item, .worker-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.8rem;
+      margin-bottom: 0.7rem;
+      background: #fbfffc;
+    }
+
+    .job-header, .worker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .chip {
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0.2rem 0.45rem;
+      border-radius: 999px;
+      background: #e8f4ea;
+      color: #1f5f26;
+      border: 1px solid #cbe6cf;
+    }
+
+    .tasks {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0;
+      display: grid;
+      gap: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .progress-row {
+      margin-top: 0.45rem;
+      display: grid;
+      gap: 0.2rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .task-btn {
+      padding: 0.4rem 0.55rem;
+      margin-top: 0.45rem;
+      font-size: 0.83rem;
+    }
+
+    .log {
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.55rem;
+      background: #f7fcf8;
+      font-size: 0.85rem;
+      color: #2f4033;
+    }
+
+    .log p { margin: 0 0 0.35rem; }
+
+    .small {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    .danger { color: var(--danger); font-weight: 700; }
+
+    @media (max-width: 900px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1>Lawn Care Owner Simulator</h1>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Day</div>
+          <div class="value" id="day">1</div>
+        </div>
+        <div class="stat">
+          <div class="label">Money</div>
+          <div class="value" id="money">$250</div>
+        </div>
+        <div class="stat">
+          <div class="label">Employees</div>
+          <div class="value" id="employeeCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Open Jobs</div>
+          <div class="value" id="openJobs">0</div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:1rem;">Business Actions</h2>
+      <button id="newRequestBtn">Get New Client Request ($50-$200)</button>
+      <button id="hireBtn" class="warn">Hire Employee ($32-$79/day)</button>
+      <button id="workBtn" class="secondary">You Work 1 Hour</button>
+      <button id="nextDayBtn">Next Day (Pay Wages + Auto Work)</button>
+      <p class="small" id="statusMsg">Start by taking a request, then either work yourself or hire employees.</p>
+      <p class="small">Each job includes: apply mulch, mow the lawn, create flower bed, trim bushes/shrubs.</p>
+      <p class="small">If money goes below $0, your company fails.</p>
+
+      <h2 style="margin-top:1rem;">Activity Log</h2>
+      <div class="log" id="log"></div>
+    </section>
+
+    <main class="card">
+      <h2>Employees</h2>
+      <div id="employees"></div>
+
+      <h2 style="margin-top:1rem;">Client Jobs</h2>
+      <div id="jobs"></div>
+    </main>
+  </div>
+
+  <script>
+    const TASK_TEMPLATES = [
+      { key: 'mulch', label: 'Apply Mulch', hours: [3, 6] },
+      { key: 'mow', label: 'Mow Lawn', hours: [2, 5] },
+      { key: 'flower', label: 'Create Flower Bed', hours: [4, 7] },
+      { key: 'trim', label: 'Trim Bushes/Shrubs', hours: [2, 5] },
+    ];
+
+    const state = {
+      day: 1,
+      money: 250,
+      employees: [],
+      jobs: [],
+      selectedJobId: null,
+      jobCounter: 1,
+      workerCounter: 1,
+      gameOver: false,
+    };
+
+    const refs = {
+      day: document.getElementById('day'),
+      money: document.getElementById('money'),
+      employeeCount: document.getElementById('employeeCount'),
+      openJobs: document.getElementById('openJobs'),
+      employees: document.getElementById('employees'),
+      jobs: document.getElementById('jobs'),
+      log: document.getElementById('log'),
+      statusMsg: document.getElementById('statusMsg'),
+      newRequestBtn: document.getElementById('newRequestBtn'),
+      hireBtn: document.getElementById('hireBtn'),
+      workBtn: document.getElementById('workBtn'),
+      nextDayBtn: document.getElementById('nextDayBtn'),
+    };
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function makeTask(template) {
+      const required = randInt(template.hours[0], template.hours[1]);
+      return {
+        key: template.key,
+        label: template.label,
+        required,
+        progress: 0,
+      };
+    }
+
+    function totalProgress(job) {
+      const done = job.tasks.reduce((sum, t) => sum + t.progress, 0);
+      const total = job.tasks.reduce((sum, t) => sum + t.required, 0);
+      return { done, total, pct: Math.floor((done / total) * 100) };
+    }
+
+    function makeJob() {
+      const id = state.jobCounter++;
+      const payout = randInt(50, 200);
+      return {
+        id,
+        customer: `Client #${id}`,
+        payout,
+        tasks: TASK_TEMPLATES.map(makeTask),
+        completed: false,
+      };
+    }
+
+    function addLog(message) {
+      const p = document.createElement('p');
+      p.textContent = `[Day ${state.day}] ${message}`;
+      refs.log.prepend(p);
+    }
+
+    function currentJob() {
+      const open = state.jobs.filter(j => !j.completed);
+      if (!open.length) return null;
+      if (!state.selectedJobId || !open.some(j => j.id === state.selectedJobId)) {
+        state.selectedJobId = open[0].id;
+      }
+      return state.jobs.find(j => j.id === state.selectedJobId);
+    }
+
+    function doWorkOnJob(job, workerName, hours) {
+      if (!job || job.completed || hours <= 0) return 0;
+
+      let remaining = hours;
+      let worked = 0;
+
+      for (const task of job.tasks) {
+        if (remaining <= 0) break;
+        const left = task.required - task.progress;
+        if (left <= 0) continue;
+
+        const used = Math.min(remaining, left);
+        task.progress += used;
+        worked += used;
+        remaining -= used;
+        addLog(`${workerName} worked ${used}h on ${task.label} for ${job.customer}.`);
+      }
+
+      const prog = totalProgress(job);
+      if (prog.done >= prog.total) {
+        job.completed = true;
+        state.money += job.payout;
+        addLog(`✅ ${job.customer} job complete! You earned $${job.payout}.`);
+      }
+
+      return worked;
+    }
+
+    function hireEmployee() {
+      if (state.gameOver) return;
+      const dailyRate = randInt(32, 79);
+      const name = `Employee #${state.workerCounter++}`;
+      state.employees.push({
+        id: state.workerCounter,
+        name,
+        dailyRate,
+        speed: randInt(5, 8),
+      });
+      addLog(`Hired ${name} for $${dailyRate}/day.`);
+      render();
+    }
+
+    function createRequest() {
+      if (state.gameOver) return;
+      const job = makeJob();
+      state.jobs.push(job);
+      state.selectedJobId = job.id;
+      addLog(`New request from ${job.customer}. Payout: $${job.payout}.`);
+      render();
+    }
+
+    function playerWork() {
+      if (state.gameOver) return;
+      const job = currentJob();
+      if (!job) {
+        addLog('No open jobs available. Get a client request first.');
+        render();
+        return;
+      }
+      doWorkOnJob(job, 'You', 1);
+      render();
+    }
+
+    function runDay() {
+      if (state.gameOver) return;
+      state.day += 1;
+
+      let wages = 0;
+      for (const emp of state.employees) {
+        wages += emp.dailyRate;
+      }
+      state.money -= wages;
+      if (wages > 0) {
+        addLog(`Paid daily wages: $${wages}.`);
+      }
+
+      const openJobs = state.jobs.filter(j => !j.completed);
+      if (openJobs.length > 0 && state.employees.length > 0) {
+        let idx = 0;
+        for (const emp of state.employees) {
+          const available = state.jobs.filter(j => !j.completed);
+          if (!available.length) break;
+          const job = available[idx % available.length];
+          doWorkOnJob(job, emp.name, emp.speed);
+          idx += 1;
+        }
+      } else if (state.employees.length > 0) {
+        addLog('Employees were idle because there were no open jobs.');
+      }
+
+      if (state.money < 0) {
+        state.gameOver = true;
+        addLog('💥 Company bankrupt. Game over. Refresh page to restart.');
+      }
+      render();
+    }
+
+    function taskLine(task) {
+      const left = Math.max(0, task.required - task.progress);
+      const done = left === 0 ? '✅' : '⬜';
+      return `<li>${done} ${task.label}: ${task.progress}/${task.required}h (${left}h left)</li>`;
+    }
+
+    function renderEmployees() {
+      if (!state.employees.length) {
+        refs.employees.innerHTML = '<p class="small">No employees hired yet.</p>';
+        return;
+      }
+      refs.employees.innerHTML = state.employees.map(emp => `
+        <div class="worker-item">
+          <div class="worker-header">
+            <strong>${emp.name}</strong>
+            <span class="chip">$${emp.dailyRate}/day</span>
+          </div>
+          <div class="small">Work speed: ${emp.speed}h per day</div>
+        </div>
+      `).join('');
+    }
+
+    function renderJobs() {
+      const open = state.jobs.filter(j => !j.completed);
+      if (!open.length) {
+        refs.jobs.innerHTML = '<p class="small">No active jobs. Click "Get New Client Request" to start.</p>';
+        return;
+      }
+
+      refs.jobs.innerHTML = open.map(job => {
+        const prog = totalProgress(job);
+        const selected = state.selectedJobId === job.id;
+        return `
+          <div class="job-item">
+            <div class="job-header">
+              <strong>${job.customer}</strong>
+              <span class="chip">Pays $${job.payout}</span>
+            </div>
+            <ul class="tasks">${job.tasks.map(taskLine).join('')}</ul>
+            <div class="progress-row">
+              <span>Total Progress: ${prog.done}/${prog.total}h (${prog.pct}%) — ${prog.total - prog.done}h left</span>
+              <progress max="${prog.total}" value="${prog.done}"></progress>
+            </div>
+            <button class="task-btn ${selected ? 'secondary' : ''}" data-select="${job.id}">
+              ${selected ? 'Selected Job' : 'Set As Active Job'}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      refs.jobs.querySelectorAll('[data-select]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedJobId = Number(btn.dataset.select);
+          render();
+        });
+      });
+    }
+
+    function render() {
+      refs.day.textContent = String(state.day);
+      refs.money.textContent = `$${state.money}`;
+      refs.employeeCount.textContent = String(state.employees.length);
+      refs.openJobs.textContent = String(state.jobs.filter(j => !j.completed).length);
+
+      const job = currentJob();
+      refs.statusMsg.textContent = job
+        ? `Active job: ${job.customer}. Keep working until all tasks reach 100%.`
+        : 'No active job selected. Get a new request to continue.';
+
+      renderEmployees();
+      renderJobs();
+
+      const disabled = state.gameOver;
+      refs.newRequestBtn.disabled = disabled;
+      refs.hireBtn.disabled = disabled;
+      refs.workBtn.disabled = disabled;
+      refs.nextDayBtn.disabled = disabled;
+    }
+
+    refs.newRequestBtn.addEventListener('click', createRequest);
+    refs.hireBtn.addEventListener('click', hireEmployee);
+    refs.workBtn.addEventListener('click', playerWork);
+    refs.nextDayBtn.addEventListener('click', runDay);
+
+    addLog('Welcome owner! Build your lawn care company.');
+    render();
+  </script>
+</body>
+</html>
