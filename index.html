@@ -7,38 +7,48 @@
   <style>
     :root {
       --card: #ffffff;
-      --ink: #1d2f20;
-      --muted: #66786e;
-      --accent: #2f8f42;
-      --accent-2: #1f6d31;
-      --line: #d1e6d4;
-      --warn: #ca8a04;
-      --danger: #b91c1c;
+      --ink: #2b1445;
+      --muted: #7a6194;
+      --accent: #6b21a8;
+      --accent-2: #581c87;
+      --line: #efc7ff;
+      --warn: #db2777;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       color: var(--ink);
-      background: linear-gradient(130deg, #eef9ef, #f7fff9);
       min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 20%, #bde7ff 0 8%, transparent 9%),
+        radial-gradient(circle at 85% 15%, #c9ecff 0 10%, transparent 11%),
+        radial-gradient(circle at 20% 70%, #a7ddff 0 9%, transparent 10%),
+        radial-gradient(circle at 75% 72%, #ccefff 0 11%, transparent 12%),
+        linear-gradient(130deg, #ff4fc5, #ff7fd8 55%, #ff95df);
+      background-attachment: fixed;
     }
+
     .wrap {
-      max-width: 1120px;
+      max-width: 1150px;
       margin: 0 auto;
       padding: 1rem;
       display: grid;
       gap: 1rem;
       grid-template-columns: 360px 1fr;
     }
+
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 1rem;
-      box-shadow: 0 6px 20px rgba(48, 89, 51, 0.08);
+      box-shadow: 0 8px 24px rgba(86, 0, 89, 0.18);
     }
-    h1, h2 { margin: 0 0 .7rem; }
+
+    h1, h2, h3 { margin: 0 0 .7rem; }
     h1 { font-size: 1.35rem; }
     h2 { font-size: 1.04rem; }
 
@@ -49,84 +59,83 @@
     }
     .stat {
       border: 1px solid var(--line);
+      background: #fff7ff;
       border-radius: 10px;
-      background: #f6fbf7;
-      padding: .6rem;
+      padding: .58rem;
     }
     .label { font-size: .78rem; color: var(--muted); }
     .value { font-size: 1.08rem; font-weight: 700; }
 
     button, select {
       width: 100%;
+      font: inherit;
       border-radius: 10px;
       padding: .55rem .6rem;
-      font: inherit;
-      border: 1px solid transparent;
     }
     button {
       margin-top: .5rem;
-      cursor: pointer;
+      border: 0;
       background: var(--accent);
-      color: #fff;
+      color: white;
+      cursor: pointer;
       font-weight: 700;
     }
     button:hover { background: var(--accent-2); }
-    button.secondary { background: #4b5563; }
     button.warn { background: var(--warn); }
 
     .small { font-size: .82rem; color: var(--muted); margin: .35rem 0 0; }
 
-    .job-item, .emp-item {
+    .emp-item, .job-item {
       border: 1px solid var(--line);
+      background: #fffbff;
       border-radius: 10px;
-      background: #fbfffc;
-      padding: .75rem;
+      padding: .72rem;
       margin-bottom: .65rem;
     }
+
     .row {
       display: flex;
       justify-content: space-between;
-      gap: .6rem;
       align-items: center;
+      gap: .5rem;
       margin-bottom: .35rem;
     }
+
     .chip {
       font-size: .72rem;
       font-weight: 700;
-      border: 1px solid #cde5d1;
-      background: #e8f3ea;
+      background: #f7e8ff;
+      border: 1px solid #eac4ff;
       border-radius: 999px;
-      padding: .18rem .48rem;
+      padding: .15rem .48rem;
       white-space: nowrap;
     }
-    .tasks { margin: .35rem 0 0; padding: 0; list-style: none; font-size: .88rem; }
-    .tasks li { margin-bottom: .2rem; }
+
+    .assign-row {
+      margin-top: .45rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .35rem;
+    }
+    .assign-row button { margin: 0; width: auto; }
+
+    .tasks { margin: .35rem 0 0; padding-left: 1rem; font-size: .88rem; }
 
     .progress-row { margin-top: .35rem; font-size: .8rem; color: var(--muted); }
     progress { width: 100%; height: 11px; }
 
-    .assign-grid {
-      margin-top: .45rem;
-      display: grid;
-      gap: .35rem;
-      grid-template-columns: 1fr auto;
-    }
-    .assign-grid button { margin: 0; padding: .5rem .7rem; width: auto; }
-
     .log {
       border: 1px solid var(--line);
       border-radius: 10px;
-      background: #f7fcf8;
-      max-height: 190px;
-      overflow-y: auto;
+      background: #fff7ff;
       padding: .55rem;
+      max-height: 215px;
+      overflow-y: auto;
       font-size: .84rem;
     }
     .log p { margin: 0 0 .35rem; }
 
-    .danger { color: var(--danger); font-weight: 700; }
-
-    @media (max-width: 930px) {
+    @media (max-width: 940px) {
       .wrap { grid-template-columns: 1fr; }
     }
   </style>
@@ -137,29 +146,26 @@
       <h1>Lawn Care Owner Simulator</h1>
 
       <div class="stats">
-        <div class="stat"><div class="label">Day</div><div class="value" id="day">1</div></div>
-        <div class="stat"><div class="label">Money</div><div class="value" id="money">$250</div></div>
-        <div class="stat"><div class="label">Employees</div><div class="value" id="employeeCount">0</div></div>
-        <div class="stat"><div class="label">Open Jobs</div><div class="value" id="openJobs">0</div></div>
+        <div class="stat"><div class="label">Day</div><div id="day" class="value">1</div></div>
+        <div class="stat"><div class="label">Money</div><div id="money" class="value">$250</div></div>
+        <div class="stat"><div class="label">Employees</div><div id="employeeCount" class="value">0</div></div>
+        <div class="stat"><div class="label">Open Jobs</div><div id="openJobs" class="value">0</div></div>
       </div>
 
       <h2 style="margin-top:1rem;">Business Actions</h2>
       <button id="newRequestBtn">Get New Request ($50-$200)</button>
       <button id="hireBtn" class="warn">Hire Employee ($32-$79/day)</button>
-      <button id="ownerWorkBtn" class="secondary">You Work Active Job (+4 power)</button>
       <button id="nextDayBtn">Next Day (Pay Wages)</button>
 
-      <p class="small" id="statusMsg">Create a request, assign employees, and beat each timer.</p>
-      <p class="small">Every new request has a 40-90 second timer.</p>
-      <p class="small">Roles matter: each employee works fastest on their specialty.</p>
-      <p class="small">If money drops below $0, company is bankrupt.</p>
+      <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
+      <p class="small">Use each employee's field of work. Wrong field will decline.</p>
 
       <h2 style="margin-top:1rem;">Activity Log</h2>
       <div id="log" class="log"></div>
     </section>
 
     <section class="card">
-      <h2>Employees (assign who works on each job)</h2>
+      <h2>Employees (choose a client + click Send)</h2>
       <div id="employees"></div>
 
       <h2 style="margin-top:1rem;">Client Jobs</h2>
@@ -169,17 +175,17 @@
 
   <script>
     const ROLE_DEFS = [
-      { name: 'Mulch Specialist', task: 'mulch' },
-      { name: 'Mowing Pro', task: 'mow' },
-      { name: 'Flower Bed Designer', task: 'flower' },
-      { name: 'Shrub Trimmer', task: 'trim' },
+      { name: 'Mulch Person', task: 'mulch' },
+      { name: 'Mowing Person', task: 'mow' },
+      { name: 'Flower Bed Person', task: 'flower' },
+      { name: 'Shrub Person', task: 'trim' },
     ];
 
     const TASKS = [
-      { key: 'mulch', label: 'Apply Mulch', units: [8, 13] },
-      { key: 'mow', label: 'Mow Lawn', units: [7, 12] },
-      { key: 'flower', label: 'Create Flower Bed', units: [8, 13] },
-      { key: 'trim', label: 'Trim Bushes/Shrubs', units: [7, 12] },
+      { key: 'mulch', label: 'Apply Mulch' },
+      { key: 'mow', label: 'Mow Lawn' },
+      { key: 'flower', label: 'Create Flower Bed' },
+      { key: 'trim', label: 'Trim Bushes/Shrubs' },
     ];
 
     const state = {
@@ -187,7 +193,6 @@
       money: 250,
       jobs: [],
       employees: [],
-      selectedJobId: null,
       jobCounter: 1,
       workerCounter: 1,
       gameOver: false,
@@ -204,51 +209,41 @@
       statusMsg: document.getElementById('statusMsg'),
       newRequestBtn: document.getElementById('newRequestBtn'),
       hireBtn: document.getElementById('hireBtn'),
-      ownerWorkBtn: document.getElementById('ownerWorkBtn'),
       nextDayBtn: document.getElementById('nextDayBtn'),
     };
 
     const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    function addLog(msg) {
+    function addLog(message) {
       const p = document.createElement('p');
-      p.textContent = `[Day ${state.day}] ${msg}`;
+      p.textContent = `[Day ${state.day}] ${message}`;
       refs.log.prepend(p);
     }
 
-    function makeTask(t) {
-      return { key: t.key, label: t.label, required: randInt(t.units[0], t.units[1]), progress: 0 };
+    function getOpenJobs() {
+      return state.jobs.filter(j => !j.completed);
     }
 
     function totalProgress(job) {
-      const done = job.tasks.reduce((n, t) => n + t.progress, 0);
-      const total = job.tasks.reduce((n, t) => n + t.required, 0);
+      const done = job.progress;
+      const total = job.required;
       return { done, total, pct: Math.floor((done / total) * 100) };
-    }
-
-    function currentOpenJobs() {
-      return state.jobs.filter(j => !j.completed && !j.failed);
-    }
-
-    function currentJob() {
-      const open = currentOpenJobs();
-      if (!open.length) return null;
-      if (!state.selectedJobId || !open.some(j => j.id === state.selectedJobId)) {
-        state.selectedJobId = open[0].id;
-      }
-      return state.jobs.find(j => j.id === state.selectedJobId);
     }
 
     function makeJob() {
       const id = state.jobCounter++;
+      const task = TASKS[randInt(0, TASKS.length - 1)];
+      const secondsToFinish = randInt(40, 90);
       return {
         id,
         customer: `Client #${id}`,
         payout: randInt(50, 200),
-        secondsLeft: randInt(40, 90),
-        tasks: TASKS.map(makeTask),
+        taskKey: task.key,
+        taskLabel: task.label,
+        estSeconds: secondsToFinish,
+        required: secondsToFinish,
+        progress: 0,
         completed: false,
-        failed: false,
       };
     }
 
@@ -256,31 +251,8 @@
       if (state.gameOver) return;
       const job = makeJob();
       state.jobs.push(job);
-      state.selectedJobId = job.id;
-      addLog(`New ${job.customer} request ($${job.payout}), timer: ${job.secondsLeft}s.`);
+      addLog(`${job.customer} asks for ONLY: ${job.taskLabel}. Est time: ${job.estSeconds}s. Pays $${job.payout}.`);
       render();
-    }
-
-    function applyWork(job, workerName, roleTask, power) {
-      if (!job || job.completed || job.failed || power <= 0) return;
-      let leftPower = power;
-
-      while (leftPower > 0) {
-        const pending = job.tasks.find(t => t.progress < t.required);
-        if (!pending) break;
-
-        const bonus = pending.key === roleTask ? 1.8 : 1;
-        const gain = Math.min(leftPower * bonus, pending.required - pending.progress);
-        pending.progress += gain;
-        leftPower -= 1;
-      }
-
-      const p = totalProgress(job);
-      if (p.done >= p.total) {
-        job.completed = true;
-        state.money += job.payout;
-        addLog(`✅ ${job.customer} finished by ${workerName}. Earned $${job.payout}.`);
-      }
     }
 
     function hireEmployee() {
@@ -292,7 +264,7 @@
         dailyRate: randInt(32, 79),
         roleName: role.name,
         roleTask: role.task,
-        powerPerSecond: randInt(1, 2),
+        workPerSecond: 1,
         assignedJobId: null,
       };
       state.workerCounter += 1;
@@ -301,31 +273,45 @@
       render();
     }
 
+    function finishCheck(job, byWho) {
+      if (!job.completed && job.progress >= job.required) {
+        job.completed = true;
+        state.money += job.payout;
+        addLog(`✅ ${job.customer} finished by ${byWho}. +$${job.payout}`);
+      }
+    }
+
     function assignEmployee(empId, jobId) {
-      const emp = state.employees.find(e => e.id === empId);
-      if (!emp) return;
+      const employee = state.employees.find(e => e.id === empId);
+      if (!employee) return;
+
       if (!jobId) {
-        emp.assignedJobId = null;
-        addLog(`${emp.name} is now unassigned.`);
+        employee.assignedJobId = null;
+        addLog(`${employee.name} is unassigned.`);
         render();
         return;
       }
-      const job = state.jobs.find(j => j.id === Number(jobId) && !j.completed && !j.failed);
+
+      const job = state.jobs.find(j => j.id === Number(jobId) && !j.completed);
       if (!job) return;
-      emp.assignedJobId = job.id;
-      addLog(`📤 Sent ${emp.name} to ${job.customer}.`);
+
+      if (employee.roleTask !== job.taskKey) {
+        addLog(`❌ Worker declined- not in my field of work.`);
+        return;
+      }
+
+      employee.assignedJobId = job.id;
+      addLog(`✅ Worker accepted- in field of work.`);
       render();
     }
 
-    function ownerWork() {
+    function ownerWork(jobId) {
       if (state.gameOver) return;
-      const job = currentJob();
-      if (!job) {
-        addLog('No active open job. Get a request first.');
-        return;
-      }
-      applyWork(job, 'you', null, 4);
-      addLog('You jumped in and helped (+4 power).');
+      const job = state.jobs.find(j => j.id === Number(jobId) && !j.completed);
+      if (!job) return;
+
+      job.progress += 3;
+      finishCheck(job, 'you');
       render();
     }
 
@@ -334,10 +320,10 @@
       state.day += 1;
       const wages = state.employees.reduce((sum, e) => sum + e.dailyRate, 0);
       state.money -= wages;
-      addLog(`Paid wages: $${wages}.`);
+      addLog(`Paid daily wages: $${wages}.`);
       if (state.money < 0) {
         state.gameOver = true;
-        addLog('💥 Bankrupt. Refresh to restart.');
+        addLog('💥 Company bankrupt. Refresh to restart.');
       }
       render();
     }
@@ -345,57 +331,41 @@
     function tick() {
       if (state.gameOver) return;
 
-      currentOpenJobs().forEach(job => {
-        job.secondsLeft -= 1;
-        if (job.secondsLeft <= 0 && !job.completed) {
-          job.failed = true;
-          addLog(`⏰ ${job.customer} timer ran out. Request lost.`);
-        }
-      });
-
       state.employees.forEach(emp => {
         if (!emp.assignedJobId) return;
-        const job = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed && !j.failed);
+        const job = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed);
         if (!job) {
           emp.assignedJobId = null;
           return;
         }
-        applyWork(job, emp.name, emp.roleTask, emp.powerPerSecond);
-      });
 
-      if (state.money < 0) {
-        state.gameOver = true;
-        addLog('💥 Bankrupt. Refresh to restart.');
-      }
+        job.progress += emp.workPerSecond;
+        finishCheck(job, emp.name);
+      });
 
       render(false);
     }
 
-    function taskRow(task) {
-      const left = Math.max(0, Math.ceil(task.required - task.progress));
-      const done = left === 0 ? '✅' : '⬜';
-      return `<li>${done} ${task.label}: ${Math.floor(task.progress)}/${task.required} (${left} left)</li>`;
-    }
-
     function renderEmployees() {
       if (!state.employees.length) {
-        refs.employees.innerHTML = '<p class="small">No employees yet.</p>';
+        refs.employees.innerHTML = '<p class="small">No employees hired yet.</p>';
         return;
       }
 
-      const options = currentOpenJobs().map(j => `<option value="${j.id}">${j.customer}</option>`).join('');
+      const openJobs = getOpenJobs();
+      const options = openJobs.map(job => `<option value="${job.id}">${job.customer} - ${job.taskLabel}</option>`).join('');
 
       refs.employees.innerHTML = state.employees.map(emp => {
-        const assigned = state.jobs.find(j => j.id === emp.assignedJobId);
+        const assigned = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed);
         return `
           <div class="emp-item">
             <div class="row">
               <strong>${emp.name}</strong>
               <span class="chip">$${emp.dailyRate}/day</span>
             </div>
-            <div class="small">Role: <strong>${emp.roleName}</strong> (${emp.powerPerSecond} power/s)</div>
-            <div class="small">Assigned: ${assigned ? assigned.customer : 'None'}</div>
-            <div class="assign-grid">
+            <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
+            <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'None'}</div>
+            <div class="assign-row">
               <select id="assign-${emp.id}">
                 <option value="">Unassigned</option>
                 ${options}
@@ -408,73 +378,69 @@
 
       refs.employees.querySelectorAll('[data-send]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const id = Number(btn.dataset.send);
-          const select = document.getElementById(`assign-${id}`);
-          assignEmployee(id, select.value);
+          const empId = Number(btn.dataset.send);
+          const selected = document.getElementById(`assign-${empId}`).value;
+          assignEmployee(empId, selected);
         });
       });
     }
 
     function renderJobs() {
-      const open = currentOpenJobs();
+      const open = getOpenJobs();
       if (!open.length) {
-        refs.jobs.innerHTML = '<p class="small">No open requests. Click "Get New Request".</p>';
+        refs.jobs.innerHTML = '<p class="small">No open jobs. Get a new request.</p>';
         return;
       }
 
       refs.jobs.innerHTML = open.map(job => {
         const p = totalProgress(job);
-        const selected = state.selectedJobId === job.id;
+        const left = Math.max(0, Math.ceil(job.required - job.progress));
         return `
           <div class="job-item">
             <div class="row">
               <strong>${job.customer}</strong>
-              <span class="chip">$${job.payout}</span>
+              <span class="chip">Pays $${job.payout}</span>
             </div>
-            <div class="small"><strong>Time left:</strong> ${job.secondsLeft}s</div>
-            <ul class="tasks">${job.tasks.map(taskRow).join('')}</ul>
-            <div class="progress-row">Total: ${Math.floor(p.done)}/${p.total} (${p.pct}%)</div>
+            <div class="small"><strong>Only task:</strong> ${job.taskLabel}</div>
+            <div class="small"><strong>Estimated total time:</strong> ${job.estSeconds}s</div>
+            <ul class="tasks">
+              <li>${job.taskLabel}: ${Math.floor(job.progress)}/${job.required} (${left} left)</li>
+            </ul>
+            <div class="progress-row">Total Progress: ${Math.floor(p.done)}/${p.total} (${p.pct}%)</div>
             <progress max="${p.total}" value="${p.done}"></progress>
-            <button class="secondary" data-select-job="${job.id}">${selected ? 'Selected' : 'Set Active'}</button>
+            <button data-owner-work="${job.id}">I will work</button>
           </div>
         `;
       }).join('');
 
-      refs.jobs.querySelectorAll('[data-select-job]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.selectedJobId = Number(btn.dataset.selectJob);
-          render();
-        });
+      refs.jobs.querySelectorAll('[data-owner-work]').forEach(btn => {
+        btn.addEventListener('click', () => ownerWork(btn.dataset.ownerWork));
       });
     }
 
     function render(full = true) {
-      refs.day.textContent = state.day;
+      refs.day.textContent = String(state.day);
       refs.money.textContent = `$${state.money}`;
-      refs.employeeCount.textContent = state.employees.length;
-      refs.openJobs.textContent = currentOpenJobs().length;
+      refs.employeeCount.textContent = String(state.employees.length);
+      refs.openJobs.textContent = String(getOpenJobs().length);
 
-      const active = currentJob();
-      refs.statusMsg.textContent = active
-        ? `Active job: ${active.customer} (${active.secondsLeft}s left).`
-        : 'No active open job. Create a request.';
+      refs.statusMsg.textContent = getOpenJobs().length
+        ? 'You can run multiple jobs at the same time.'
+        : 'Create a new request to begin.';
 
-      if (full) {
-        renderEmployees();
-      }
+      if (full) renderEmployees();
       renderJobs();
 
-      [refs.newRequestBtn, refs.hireBtn, refs.ownerWorkBtn, refs.nextDayBtn].forEach(btn => {
+      [refs.newRequestBtn, refs.hireBtn, refs.nextDayBtn].forEach(btn => {
         btn.disabled = state.gameOver;
       });
     }
 
     refs.newRequestBtn.addEventListener('click', createRequest);
     refs.hireBtn.addEventListener('click', hireEmployee);
-    refs.ownerWorkBtn.addEventListener('click', ownerWork);
     refs.nextDayBtn.addEventListener('click', nextDay);
 
-    addLog('Welcome owner! Jobs now run in real time (40-90s each).');
+    addLog('Welcome owner! Jobs now use single-task requests and role-based acceptance.');
     render();
     setInterval(tick, 1000);
   </script>
