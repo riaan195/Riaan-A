@@ -157,6 +157,8 @@
       <button id="hireBtn" class="warn">Hire Employee ($32-$79/day)</button>
       <button id="nextDayBtn">Next Day (Pay Wages)</button>
       <button id="musicBtn">Play Background Music</button>
+      <input id="musicFile" type="file" accept="audio/*" />
+      <p class="small">Optional: upload your own song file and the music button will play it.</p>
 
       <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
       <p class="small">Use each employee's field of work. Wrong field will decline.</p>
@@ -212,10 +214,12 @@
       hireBtn: document.getElementById('hireBtn'),
       nextDayBtn: document.getElementById('nextDayBtn'),
       musicBtn: document.getElementById('musicBtn'),
+      musicFile: document.getElementById('musicFile'),
     };
 
     let audioCtx = null;
     let musicNodes = null;
+    let uploadedAudio = null;
 
     const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -248,6 +252,7 @@
         estSeconds: secondsToFinish,
         required: secondsToFinish,
         progress: 0,
+        ownerWorking: false,
         completed: false,
       };
     }
@@ -281,6 +286,7 @@
     function finishCheck(job, byWho) {
       if (!job.completed && job.progress >= job.required) {
         job.completed = true;
+        job.ownerWorking = false;
         state.money += job.payout;
         addLog(`✅ ${job.customer} finished by ${byWho}. +$${job.payout}`);
       }
@@ -306,8 +312,10 @@
       const job = state.jobs.find(j => j.id === Number(jobId) && !j.completed);
       if (!job) return;
 
-      job.progress += 3;
-      finishCheck(job, 'you');
+      job.ownerWorking = !job.ownerWorking;
+      addLog(job.ownerWorking
+        ? `🧑‍🌾 You started working on ${job.customer}.`
+        : `⏸️ You stopped working on ${job.customer}.`);
       render();
     }
 
@@ -339,40 +347,64 @@
         finishCheck(job, emp.name);
       });
 
+      state.jobs.forEach(job => {
+        if (!job.completed && job.ownerWorking) {
+          job.progress += 2;
+          finishCheck(job, 'you');
+        }
+      });
+
       render(false);
     }
 
     function toggleMusic() {
+      if (uploadedAudio) {
+        if (uploadedAudio.paused) {
+          uploadedAudio.play();
+          refs.musicBtn.textContent = 'Pause Background Music';
+        } else {
+          uploadedAudio.pause();
+          refs.musicBtn.textContent = 'Play Background Music';
+        }
+        return;
+      }
+
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         const master = audioCtx.createGain();
-        master.gain.value = 0.05;
+        master.gain.value = 0.035;
         master.connect(audioCtx.destination);
 
         const oscA = audioCtx.createOscillator();
         const oscB = audioCtx.createOscillator();
         const lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
+        const lowPass = audioCtx.createBiquadFilter();
 
         oscA.type = 'sine';
-        oscB.type = 'triangle';
-        oscA.frequency.value = 220;
-        oscB.frequency.value = 330;
-        lfo.frequency.value = 0.18;
-        lfoGain.gain.value = 38;
+        oscB.type = 'sawtooth';
+        oscA.frequency.value = 196;
+        oscB.frequency.value = 247;
+        lfo.frequency.value = 0.08;
+        lfoGain.gain.value = 22;
+
+        lowPass.type = 'lowpass';
+        lowPass.frequency.value = 850;
+        lowPass.Q.value = 1;
 
         lfo.connect(lfoGain);
         lfoGain.connect(oscA.frequency);
 
-        oscA.connect(master);
-        oscB.connect(master);
+        oscA.connect(lowPass);
+        oscB.connect(lowPass);
+        lowPass.connect(master);
 
         oscA.start();
         oscB.start();
         lfo.start();
 
-        musicNodes = { oscA, oscB, lfo };
+        musicNodes = { oscA, oscB, lfo, lowPass };
       }
 
       if (audioCtx.state === 'running') {
@@ -439,7 +471,7 @@
             </ul>
             <div class="progress-row">Total Progress: ${Math.floor(p.done)}/${p.total} (${p.pct}%)</div>
             <progress max="${p.total}" value="${p.done}"></progress>
-            <button data-owner-work="${job.id}">I will work</button>
+            <button data-owner-work="${job.id}">${job.ownerWorking ? 'Stop working this job' : 'I will work'}</button>
           </div>
         `;
       }).join('');
@@ -471,6 +503,18 @@
     refs.hireBtn.addEventListener('click', hireEmployee);
     refs.nextDayBtn.addEventListener('click', nextDay);
     refs.musicBtn.addEventListener('click', toggleMusic);
+    refs.musicFile.addEventListener('change', () => {
+      const file = refs.musicFile.files[0];
+      if (!file) return;
+      if (uploadedAudio) {
+        uploadedAudio.pause();
+      }
+      uploadedAudio = new Audio(URL.createObjectURL(file));
+      uploadedAudio.loop = true;
+      uploadedAudio.volume = 0.35;
+      refs.musicBtn.textContent = 'Play Background Music';
+      addLog(`Loaded custom song: ${file.name}`);
+    });
 
     addLog('Welcome owner! Jobs now use single-task requests and role-based acceptance.');
     render();
