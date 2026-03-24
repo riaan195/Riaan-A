@@ -157,7 +157,7 @@
 
       <h2 style="margin-top:1rem;">Business Actions</h2>
       <button id="newRequestBtn">Get New Request ($50-$200)</button>
-      <button id="hireBtn" class="warn">Hire Employee ($32-$79/day)</button>
+      <button id="hireBtn" class="warn">Hire Employee ($60-$110/day)</button>
       <button id="nextDayBtn">Next Day (Pay Wages)</button>
       <button id="musicBtn">Play Background Music</button>
       <input id="musicFile" type="file" accept="audio/*" />
@@ -166,6 +166,7 @@
       <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
       <p class="small">Use each employee's field of work. Wrong field will decline.</p>
       <p class="small">Limits: max 30 employees, max 80 open requests.</p>
+      <p class="small">All employee wages are between $60 and $110.</p>
 
       <h2 style="margin-top:1rem;">Activity Log</h2>
       <div id="log" class="log"></div>
@@ -290,7 +291,7 @@
       const emp = {
         id: state.workerCounter,
         name: `Employee #${state.workerCounter}`,
-        dailyRate: randInt(32, 79),
+        dailyRate: randInt(60, 110),
         roleName: role.name,
         roleTask: role.task,
         workPerSecond: 1,
@@ -299,6 +300,17 @@
       state.workerCounter += 1;
       state.employees.push(emp);
       addLog(`Hired ${emp.name} (${emp.roleName}) for $${emp.dailyRate}/day.`);
+      render();
+    }
+
+    function setEmployeeWage(empId, newWage) {
+      const employee = state.employees.find(e => e.id === empId);
+      if (!employee) return;
+      const parsed = Number(newWage);
+      if (Number.isNaN(parsed)) return;
+      const clamped = Math.min(110, Math.max(60, Math.floor(parsed)));
+      employee.dailyRate = clamped;
+      addLog(`💲 ${employee.name} wage updated to $${clamped}/day.`);
       render();
     }
 
@@ -448,6 +460,11 @@
             </div>
             <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
             <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'Waiting for matching request...'}</div>
+            <div class="small" style="margin-top:.45rem;"><strong>Wage Deduction</strong></div>
+            <div style="display:grid; grid-template-columns: 1fr auto; gap:.35rem; margin-top:.25rem;">
+              <input id="wage-${emp.id}" type="number" min="60" max="110" value="${emp.dailyRate}" />
+              <button data-set-wage="${emp.id}" style="margin:0;">Set</button>
+            </div>
           </div>
         `;
       }).join('');
@@ -455,6 +472,14 @@
       refs.employees.querySelectorAll('[data-fire]').forEach(btn => {
         btn.addEventListener('click', () => {
           fireEmployee(Number(btn.dataset.fire));
+        });
+      });
+
+      refs.employees.querySelectorAll('[data-set-wage]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const empId = Number(btn.dataset.setWage);
+          const input = document.getElementById(`wage-${empId}`);
+          setEmployeeWage(empId, input.value);
         });
       });
     }
