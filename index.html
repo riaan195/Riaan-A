@@ -111,14 +111,6 @@
       white-space: nowrap;
     }
 
-    .assign-row {
-      margin-top: .45rem;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: .35rem;
-    }
-    .assign-row button { margin: 0; width: auto; }
-
     .tasks { margin: .35rem 0 0; padding-left: 1rem; font-size: .88rem; }
 
     .progress-row { margin-top: .35rem; font-size: .8rem; color: var(--muted); }
@@ -261,7 +253,9 @@
       if (state.gameOver) return;
       const job = makeJob();
       state.jobs.push(job);
+      job.ownerWorking = true;
       addLog(`${job.customer} asks for ONLY: ${job.taskLabel}. Est time: ${job.estSeconds}s. Pays $${job.payout}.`);
+      addLog(`🧑‍🌾 You started servicing ${job.customer} automatically.`);
       render();
     }
 
@@ -292,33 +286,6 @@
       }
     }
 
-    function assignEmployee(empId) {
-      const employee = state.employees.find(e => e.id === empId);
-      if (!employee) return;
-
-      const job = state.jobs.find(j => !j.completed && j.taskKey === employee.roleTask);
-      if (!job) {
-        addLog(`❌ Worker declined- not in my field of work.`);
-        return;
-      }
-
-      employee.assignedJobId = job.id;
-      addLog(`✅ Worker accepted- in field of work.`);
-      render();
-    }
-
-    function ownerWork(jobId) {
-      if (state.gameOver) return;
-      const job = state.jobs.find(j => j.id === Number(jobId) && !j.completed);
-      if (!job) return;
-
-      job.ownerWorking = !job.ownerWorking;
-      addLog(job.ownerWorking
-        ? `🧑‍🌾 You started working on ${job.customer}.`
-        : `⏸️ You stopped working on ${job.customer}.`);
-      render();
-    }
-
     function nextDay() {
       if (state.gameOver) return;
       state.day += 1;
@@ -336,6 +303,16 @@
       if (state.gameOver) return;
 
       state.employees.forEach(emp => {
+        if (emp.assignedJobId) return;
+        const job = state.jobs.find(j => !j.completed
+          && j.taskKey === emp.roleTask
+          && !state.employees.some(other => other.assignedJobId === j.id));
+        if (!job) return;
+        emp.assignedJobId = job.id;
+        addLog(`✅ ${emp.name} auto-assigned to ${job.customer} (${job.taskLabel}).`);
+      });
+
+      state.employees.forEach(emp => {
         if (!emp.assignedJobId) return;
         const job = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed);
         if (!job) {
@@ -348,7 +325,10 @@
       });
 
       state.jobs.forEach(job => {
-        if (!job.completed && job.ownerWorking) {
+        if (job.completed) return;
+        const occupiedByEmployee = state.employees.some(emp => emp.assignedJobId === job.id);
+        job.ownerWorking = !occupiedByEmployee;
+        if (job.ownerWorking) {
           job.progress += 2;
           finishCheck(job, 'you');
         }
@@ -431,21 +411,10 @@
               <span class="chip">$${emp.dailyRate}/day</span>
             </div>
             <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
-            <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'None'}</div>
-            <div class="assign-row">
-              <div class="small">Send auto-picks first matching open job.</div>
-              <button data-send="${emp.id}">Send</button>
-            </div>
+            <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'Waiting for matching request...'}</div>
           </div>
         `;
       }).join('');
-
-      refs.employees.querySelectorAll('[data-send]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const empId = Number(btn.dataset.send);
-          assignEmployee(empId);
-        });
-      });
     }
 
     function renderJobs() {
@@ -470,15 +439,11 @@
               <li>${job.taskLabel}: ${Math.floor(job.progress)}/${job.required} (${left} left)</li>
             </ul>
             <div class="progress-row">Total Progress: ${Math.floor(p.done)}/${p.total} (${p.pct}%)</div>
+            <div class="small">${job.ownerWorking ? 'You are servicing this request automatically.' : 'Employee is servicing this request.'}</div>
             <progress max="${p.total}" value="${p.done}"></progress>
-            <button data-owner-work="${job.id}">${job.ownerWorking ? 'Stop working this job' : 'I will work'}</button>
           </div>
         `;
       }).join('');
-
-      refs.jobs.querySelectorAll('[data-owner-work]').forEach(btn => {
-        btn.addEventListener('click', () => ownerWork(btn.dataset.ownerWork));
-      });
     }
 
     function render(full = true) {
