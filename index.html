@@ -154,12 +154,24 @@
     }
     .log p { margin: 0 0 .35rem; }
 
+    .save-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 110px;
+      z-index: 999;
+      background: #16a34a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .save-btn:hover { background: #15803d; }
+
     @media (max-width: 940px) {
       .wrap { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+  <button id="saveBtn" class="save-btn">Save</button>
   <div class="wrap">
     <section class="card">
       <h1>Lawn Care Owner Simulator</h1>
@@ -176,8 +188,9 @@
       <button id="hireBtn" class="warn">Hire Employee ($60-$110/day)</button>
       <button id="nextDayBtn">Next Day (Pay Wages)</button>
       <button id="musicBtn">Play Background Music</button>
-      <input id="musicFile" type="file" accept="audio/*" />
-      <p class="small">Optional: upload your own song file and the music button will play it.</p>
+      <button id="pickMusicBtn">Choose Music File</button>
+      <input id="musicFile" type="file" accept="audio/*" style="display:none;" />
+      <p class="small">Optional: choose your song file, then click Play Background Music.</p>
 
       <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
       <p class="small">Use each employee's field of work. Wrong field will decline.</p>
@@ -246,13 +259,16 @@
       hireBtn: document.getElementById('hireBtn'),
       nextDayBtn: document.getElementById('nextDayBtn'),
       musicBtn: document.getElementById('musicBtn'),
+      pickMusicBtn: document.getElementById('pickMusicBtn'),
       musicFile: document.getElementById('musicFile'),
+      saveBtn: document.getElementById('saveBtn'),
     };
 
     let audioCtx = null;
     let musicNodes = null;
     let uploadedAudio = null;
     let uploadedAudioUrl = null;
+    const SAVE_KEY = 'lawn_owner_sim_save_v1';
 
     const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -581,6 +597,15 @@
     refs.hireBtn.addEventListener('click', hireEmployee);
     refs.nextDayBtn.addEventListener('click', nextDay);
     refs.musicBtn.addEventListener('click', toggleMusic);
+    refs.pickMusicBtn.addEventListener('click', () => refs.musicFile.click());
+    refs.saveBtn.addEventListener('click', () => {
+      const snapshot = {
+        day: state.day,
+        money: state.money,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+      addLog(`💾 Saved game money: $${state.money}.`);
+    });
     refs.musicFile.addEventListener('change', () => {
       const file = refs.musicFile.files[0];
       if (!file) return;
@@ -607,6 +632,19 @@
       refs.musicBtn.textContent = 'Play Background Music';
       addLog(`Loaded custom song: ${file.name}`);
     });
+
+    (() => {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (typeof data.day === 'number') state.day = data.day;
+        if (typeof data.money === 'number') state.money = data.money;
+        addLog(`💾 Loaded saved money: $${state.money}.`);
+      } catch (err) {
+        console.warn('Failed to load save', err);
+      }
+    })();
 
     addLog('Welcome owner! Jobs now use single-task requests and role-based acceptance.');
     render();
