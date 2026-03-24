@@ -101,6 +101,17 @@
       margin-bottom: .35rem;
     }
 
+    .fire-btn {
+      width: auto;
+      margin: 0;
+      padding: .1rem .45rem;
+      border-radius: 999px;
+      background: #dc2626;
+      font-size: .82rem;
+      line-height: 1.2;
+    }
+    .fire-btn:hover { background: #b91c1c; }
+
     .chip {
       font-size: .72rem;
       font-weight: 700;
@@ -139,7 +150,7 @@
 
       <div class="stats">
         <div class="stat"><div class="label">Day</div><div id="day" class="value">1</div></div>
-        <div class="stat"><div class="label">Money</div><div id="money" class="value">$250</div></div>
+        <div class="stat"><div class="label">Money</div><div id="money" class="value">$250</div><div id="wages" class="small">Wages: $0</div></div>
         <div class="stat"><div class="label">Employees</div><div id="employeeCount" class="value">0</div></div>
         <div class="stat"><div class="label">Open Jobs</div><div id="openJobs" class="value">0</div></div>
       </div>
@@ -154,6 +165,7 @@
 
       <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
       <p class="small">Use each employee's field of work. Wrong field will decline.</p>
+      <p class="small">Limits: max 30 employees, max 80 open requests.</p>
 
       <h2 style="margin-top:1rem;">Activity Log</h2>
       <div id="log" class="log"></div>
@@ -196,6 +208,7 @@
     const refs = {
       day: document.getElementById('day'),
       money: document.getElementById('money'),
+      wages: document.getElementById('wages'),
       employeeCount: document.getElementById('employeeCount'),
       openJobs: document.getElementById('openJobs'),
       employees: document.getElementById('employees'),
@@ -225,6 +238,10 @@
       return state.jobs.filter(j => !j.completed);
     }
 
+    function totalWages() {
+      return state.employees.reduce((sum, e) => sum + e.dailyRate + 10, 0);
+    }
+
     function totalProgress(job) {
       const done = job.progress;
       const total = job.required;
@@ -251,6 +268,10 @@
 
     function createRequest() {
       if (state.gameOver) return;
+      if (getOpenJobs().length >= 80) {
+        addLog('⚠️ Request limit reached (80 open requests).');
+        return;
+      }
       const job = makeJob();
       state.jobs.push(job);
       job.ownerWorking = true;
@@ -261,6 +282,10 @@
 
     function hireEmployee() {
       if (state.gameOver) return;
+      if (state.employees.length >= 30) {
+        addLog('⚠️ Employee limit reached (30).');
+        return;
+      }
       const role = ROLE_DEFS[randInt(0, ROLE_DEFS.length - 1)];
       const emp = {
         id: state.workerCounter,
@@ -277,6 +302,14 @@
       render();
     }
 
+    function fireEmployee(empId) {
+      const idx = state.employees.findIndex(e => e.id === empId);
+      if (idx === -1) return;
+      const [removed] = state.employees.splice(idx, 1);
+      addLog(`🟥 ${removed.name} fired.`);
+      render();
+    }
+
     function finishCheck(job, byWho) {
       if (!job.completed && job.progress >= job.required) {
         job.completed = true;
@@ -289,9 +322,9 @@
     function nextDay() {
       if (state.gameOver) return;
       state.day += 1;
-      const wages = state.employees.reduce((sum, e) => sum + e.dailyRate, 0);
+      const wages = totalWages();
       state.money -= wages;
-      addLog(`Paid daily wages: $${wages}.`);
+      addLog(`Paid daily wages (+$10 bonus per employee): $${wages}.`);
       if (state.money < 0) {
         state.gameOver = true;
         addLog('💥 Company bankrupt. Refresh to restart.');
@@ -407,14 +440,23 @@
         return `
           <div class="emp-item">
             <div class="row">
-              <strong>${emp.name}</strong>
-              <span class="chip">$${emp.dailyRate}/day</span>
+              <div style="display:flex; align-items:center; gap:.45rem;">
+                <strong>${emp.name}</strong>
+                <button class="fire-btn" data-fire="${emp.id}" title="Fire Employee">X</button>
+              </div>
+              <span class="chip">$${emp.dailyRate}/day + $10 bonus</span>
             </div>
             <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
             <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'Waiting for matching request...'}</div>
           </div>
         `;
       }).join('');
+
+      refs.employees.querySelectorAll('[data-fire]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          fireEmployee(Number(btn.dataset.fire));
+        });
+      });
     }
 
     function renderJobs() {
@@ -449,6 +491,7 @@
     function render(full = true) {
       refs.day.textContent = String(state.day);
       refs.money.textContent = `$${state.money}`;
+      refs.wages.textContent = `Wages: $${totalWages()}`;
       refs.employeeCount.textContent = String(state.employees.length);
       refs.openJobs.textContent = String(getOpenJobs().length);
 
