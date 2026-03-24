@@ -127,6 +127,21 @@
     .progress-row { margin-top: .35rem; font-size: .8rem; color: var(--muted); }
     progress { width: 100%; height: 11px; }
 
+    .wage-toggle {
+      width: 190px;
+      margin-top: .55rem;
+      background: #5b21b6;
+    }
+
+    .wage-panel {
+      margin-top: .35rem;
+      display: none;
+      grid-template-columns: 1fr auto;
+      gap: .35rem;
+      max-width: 250px;
+    }
+    .wage-panel.open { display: grid; }
+
     .log {
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -460,10 +475,10 @@
             </div>
             <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
             <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'Waiting for matching request...'}</div>
-            <div class="small" style="margin-top:.45rem;"><strong>Wage Deduction</strong></div>
-            <div style="display:grid; grid-template-columns: 1fr auto; gap:.35rem; margin-top:.25rem;">
+            <button class="wage-toggle" data-open-wage="${emp.id}">Wage Deduction</button>
+            <div class="wage-panel" id="wage-panel-${emp.id}">
               <input id="wage-${emp.id}" type="number" min="60" max="110" value="${emp.dailyRate}" />
-              <button data-set-wage="${emp.id}" style="margin:0;">Set</button>
+              <button data-set-wage="${emp.id}" style="margin:0;">Send</button>
             </div>
           </div>
         `;
@@ -480,6 +495,14 @@
           const empId = Number(btn.dataset.setWage);
           const input = document.getElementById(`wage-${empId}`);
           setEmployeeWage(empId, input.value);
+        });
+      });
+
+      refs.employees.querySelectorAll('[data-open-wage]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const empId = Number(btn.dataset.openWage);
+          const panel = document.getElementById(`wage-panel-${empId}`);
+          panel.classList.toggle('open');
         });
       });
     }
