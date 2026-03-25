@@ -90,8 +90,8 @@
       border: 1px solid var(--line);
       background: #fffbff;
       border-radius: 10px;
-      padding: .72rem;
-      margin-bottom: .65rem;
+      padding: .5rem;
+      margin-bottom: .45rem;
     }
 
     .row {
@@ -154,6 +154,20 @@
     }
     .log p { margin: 0 0 .35rem; }
 
+    .list-shell {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: .6rem;
+      background: #fff8ff;
+      margin-bottom: .75rem;
+    }
+
+    .list-body {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: .2rem;
+    }
+
     .save-btn {
       position: fixed;
       top: 12px;
@@ -202,11 +216,15 @@
     </section>
 
     <section class="card">
-      <h2>Employees</h2>
-      <div id="employees"></div>
+      <div class="list-shell">
+        <h2>Employees List</h2>
+        <div id="employees" class="list-body"></div>
+      </div>
 
-      <h2 style="margin-top:1rem;">Client Jobs</h2>
-      <div id="jobs"></div>
+      <div class="list-shell">
+        <h2>Client Requests List</h2>
+        <div id="jobs" class="list-body"></div>
+      </div>
     </section>
   </div>
 
