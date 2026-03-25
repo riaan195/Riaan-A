@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' blob: data:; media-src 'self' blob: data:;" />
+  <title>Lawn Care Owner Simulator</title>
+  <style>
+    :root {
+      --card: #ffffff;
+      --ink: #2b1445;
+      --muted: #7a6194;
+      --accent: #6b21a8;
+      --accent-2: #581c87;
+      --line: #efc7ff;
+      --warn: #db2777;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 20%, #bde7ff 0 8%, transparent 9%),
+        radial-gradient(circle at 85% 15%, #c9ecff 0 10%, transparent 11%),
+        radial-gradient(circle at 20% 70%, #a7ddff 0 9%, transparent 10%),
+        radial-gradient(circle at 75% 72%, #ccefff 0 11%, transparent 12%),
+        linear-gradient(130deg, #ff4fc5, #ff7fd8 55%, #ff95df);
+      background-attachment: fixed;
+    }
+
+    .wrap {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 360px 1fr;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: 0 8px 24px rgba(86, 0, 89, 0.18);
+    }
+
+    h1, h2, h3 { margin: 0 0 .7rem; }
+    h1 { font-size: 1.35rem; }
+    h2 { font-size: 1.04rem; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .55rem;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      background: #fff7ff;
+      border-radius: 10px;
+      padding: .58rem;
+    }
+    .label { font-size: .78rem; color: var(--muted); }
+    .value { font-size: 1.08rem; font-weight: 700; }
+
+    button, select {
+      width: 100%;
+      font: inherit;
+      border-radius: 10px;
+      padding: .55rem .6rem;
+    }
+    button {
+      margin-top: .5rem;
+      border: 0;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button:hover { background: var(--accent-2); }
+    button.warn { background: var(--warn); }
+
+    .small { font-size: .82rem; color: var(--muted); margin: .35rem 0 0; }
+
+    .emp-item, .job-item {
+      border: 1px solid var(--line);
+      background: #fffbff;
+      border-radius: 10px;
+      padding: .5rem;
+      margin-bottom: .45rem;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: .35rem;
+    }
+
+    .fire-btn {
+      width: auto;
+      margin: 0;
+      padding: .1rem .45rem;
+      border-radius: 999px;
+      background: #dc2626;
+      font-size: .82rem;
+      line-height: 1.2;
+    }
+    .fire-btn:hover { background: #b91c1c; }
+
+    .chip {
+      font-size: .72rem;
+      font-weight: 700;
+      background: #f7e8ff;
+      border: 1px solid #eac4ff;
+      border-radius: 999px;
+      padding: .15rem .48rem;
+      white-space: nowrap;
+    }
+
+    .tasks { margin: .35rem 0 0; padding-left: 1rem; font-size: .88rem; }
+
+    .progress-row { margin-top: .35rem; font-size: .8rem; color: var(--muted); }
+    progress { width: 100%; height: 11px; }
+
+    .wage-toggle {
+      width: 190px;
+      margin-top: .55rem;
+      background: #5b21b6;
+    }
+
+    .wage-panel {
+      margin-top: .35rem;
+      display: none;
+      grid-template-columns: 1fr auto;
+      gap: .35rem;
+      max-width: 250px;
+    }
+    .wage-panel.open { display: grid; }
+
+    .log {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff7ff;
+      padding: .55rem;
+      max-height: 215px;
+      overflow-y: auto;
+      font-size: .84rem;
+    }
+    .log p { margin: 0 0 .35rem; }
+
+    .list-shell {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: .6rem;
+      background: #fff8ff;
+    }
+
+    .list-body {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: .2rem;
+    }
+
+    .split-lists {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    .save-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 110px;
+      z-index: 999;
+      background: #16a34a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .save-btn:hover { background: #15803d; }
+
+    .load-btn {
+      position: fixed;
+      top: 12px;
+      right: 130px;
+      width: 130px;
+      z-index: 999;
+      background: #2563eb;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .load-btn:hover { background: #1d4ed8; }
+
+    .restart-btn {
+      position: fixed;
+      top: 12px;
+      right: 270px;
+      width: 130px;
+      z-index: 999;
+      background: #b91c1c;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .restart-btn:hover { background: #991b1b; }
+
+    @media (max-width: 940px) {
+      .wrap { grid-template-columns: 1fr; }
+      .split-lists { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button id="restartBtn" class="restart-btn">Restart Progress</button>
+  <button id="loadBtn" class="load-btn">Load Save File</button>
+  <input id="loadSaveFile" type="file" accept=".json,application/json" style="display:none;" />
+  <button id="saveBtn" class="save-btn">Save</button>
+  <div class="wrap">
+    <section class="card">
+      <h1>Lawn Care Owner Simulator</h1>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Day</div><div id="day" class="value">1</div></div>
+        <div class="stat"><div class="label">Money</div><div id="money" class="value">$250</div><div id="wages" class="small">Wages: $0</div></div>
+        <div class="stat"><div class="label">Employees</div><div id="employeeCount" class="value">0</div></div>
+        <div class="stat"><div class="label">Open Jobs</div><div id="openJobs" class="value">0</div></div>
+      </div>
+
+      <h2 style="margin-top:1rem;">Business Actions</h2>
+      <button id="newRequestBtn">Get New Request ($50-$200)</button>
+      <button id="hireBtn" class="warn">Hire Employee ($60-$110/day)</button>
+      <button id="nextDayBtn">Next Day (Pay Wages)</button>
+      <button id="musicBtn">Play Background Music</button>
+      <button id="pickMusicBtn">Choose Music File</button>
+      <input id="musicFile" type="file" accept="audio/*" style="display:none;" />
+      <p class="small">Optional: choose your song file, then click Play Background Music.</p>
+
+      <p class="small" id="statusMsg">Each client asks for one task only. Estimated completion takes 40-90 seconds.</p>
+      <p class="small">Use each employee's field of work. Wrong field will decline.</p>
+      <p class="small">Limits: max 30 employees, max 80 open requests.</p>
+      <p class="small">Default wages by field: Mowing $70, Shrub $75, Mulch $80, Flower $65, Weed Removal $90.</p>
+
+      <h2 style="margin-top:1rem;">Activity Log</h2>
+      <div id="log" class="log"></div>
+    </section>
+
+    <section class="card">
+      <div class="split-lists">
+        <div class="list-shell">
+          <h2>Employees List</h2>
+          <div id="employees" class="list-body"></div>
+        </div>
+
+        <div class="list-shell">
+          <h2>Client Requests List</h2>
+          <div id="jobs" class="list-body"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const ROLE_DEFS = [
+      { name: 'Mulch Person', task: 'mulch' },
+      { name: 'Mowing Person', task: 'mow' },
+      { name: 'Flower Bed Person', task: 'flower' },
+      { name: 'Shrub Person', task: 'trim' },
+      { name: 'Weed Removal Person', task: 'weed' },
+    ];
+
+    const TASKS = [
+      { key: 'mulch', label: 'Apply Mulch' },
+      { key: 'mow', label: 'Mow Lawn' },
+      { key: 'flower', label: 'Create Flower Bed' },
+      { key: 'trim', label: 'Trim Bushes/Shrubs' },
+      { key: 'weed', label: 'Weed Removal' },
+    ];
+
+    const BASE_WAGES = {
+      mow: 70,
+      trim: 75,
+      mulch: 80,
+      flower: 65,
+      weed: 90,
+    };
+
+    const state = {
+      day: 1,
+      money: 250,
+      jobs: [],
+      employees: [],
+      jobCounter: 1,
+      workerCounter: 1,
+      gameOver: false,
+    };
+
+    const refs = {
+      day: document.getElementById('day'),
+      money: document.getElementById('money'),
+      wages: document.getElementById('wages'),
+      employeeCount: document.getElementById('employeeCount'),
+      openJobs: document.getElementById('openJobs'),
+      employees: document.getElementById('employees'),
+      jobs: document.getElementById('jobs'),
+      log: document.getElementById('log'),
+      statusMsg: document.getElementById('statusMsg'),
+      newRequestBtn: document.getElementById('newRequestBtn'),
+      hireBtn: document.getElementById('hireBtn'),
+      nextDayBtn: document.getElementById('nextDayBtn'),
+      musicBtn: document.getElementById('musicBtn'),
+      pickMusicBtn: document.getElementById('pickMusicBtn'),
+      musicFile: document.getElementById('musicFile'),
+      saveBtn: document.getElementById('saveBtn'),
+      loadBtn: document.getElementById('loadBtn'),
+      loadSaveFile: document.getElementById('loadSaveFile'),
+      restartBtn: document.getElementById('restartBtn'),
+    };
+
+    let audioCtx = null;
+    let musicNodes = null;
+    let uploadedAudio = null;
+    let uploadedAudioUrl = null;
+    const SAVE_KEY = 'lawn_owner_sim_save_v1';
+
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function addLog(message) {
+      const p = document.createElement('p');
+      p.textContent = `[Day ${state.day}] ${message}`;
+      refs.log.prepend(p);
+      while (refs.log.children.length > 120) {
+        refs.log.removeChild(refs.log.lastChild);
+      }
+    }
+
+    function getOpenJobs() {
+      return state.jobs.filter(j => !j.completed);
+    }
+
+    function totalWages() {
+      return state.employees.reduce((sum, e) => sum + e.dailyRate + 10, 0);
+    }
+
+    function totalProgress(job) {
+      const done = job.progress;
+      const total = job.required;
+      return { done, total, pct: Math.floor((done / total) * 100) };
+    }
+
+    function buildSnapshot() {
+      return {
+        day: state.day,
+        money: state.money,
+        jobs: state.jobs,
+        employees: state.employees,
+        jobCounter: state.jobCounter,
+        workerCounter: state.workerCounter,
+        gameOver: state.gameOver,
+      };
+    }
+
+    function applySnapshot(data) {
+      if (typeof data.day === 'number') state.day = data.day;
+      if (typeof data.money === 'number') state.money = data.money;
+      if (Array.isArray(data.jobs)) state.jobs = data.jobs;
+      if (Array.isArray(data.employees)) state.employees = data.employees;
+      if (typeof data.jobCounter === 'number') state.jobCounter = data.jobCounter;
+      if (typeof data.workerCounter === 'number') state.workerCounter = data.workerCounter;
+      if (typeof data.gameOver === 'boolean') state.gameOver = data.gameOver;
+      render(true);
+    }
+
+    function makeJob() {
+      const id = state.jobCounter++;
+      const task = TASKS[randInt(0, TASKS.length - 1)];
+      const secondsToFinish = randInt(40, 90);
+      return {
+        id,
+        customer: `Client #${id}`,
+        payout: randInt(50, 200),
+        taskKey: task.key,
+        taskLabel: task.label,
+        estSeconds: secondsToFinish,
+        required: secondsToFinish,
+        progress: 0,
+        ownerWorking: false,
+        completed: false,
+      };
+    }
+
+    function createRequest() {
+      if (state.gameOver) return;
+      if (getOpenJobs().length >= 80) {
+        addLog('⚠️ Request limit reached (80 open requests).');
+        return;
+      }
+      const job = makeJob();
+      state.jobs.push(job);
+      job.ownerWorking = true;
+      addLog(`${job.customer} asks for ONLY: ${job.taskLabel}. Est time: ${job.estSeconds}s. Pays $${job.payout}.`);
+      addLog(`🧑‍🌾 You started servicing ${job.customer} automatically.`);
+      render();
+    }
+
+    function hireEmployee() {
+      if (state.gameOver) return;
+      if (state.employees.length >= 30) {
+        addLog('⚠️ Employee limit reached (30).');
+        return;
+      }
+      const role = ROLE_DEFS[randInt(0, ROLE_DEFS.length - 1)];
+      const baseWage = BASE_WAGES[role.task] ?? 70;
+      const emp = {
+        id: state.workerCounter,
+        name: `Employee #${state.workerCounter}`,
+        dailyRate: baseWage,
+        roleName: role.name,
+        roleTask: role.task,
+        workPerSecond: 1,
+        assignedJobId: null,
+      };
+      state.workerCounter += 1;
+      state.employees.push(emp);
+      addLog(`Hired ${emp.name} (${emp.roleName}) for $${emp.dailyRate}/day (default for field).`);
+      render();
+    }
+
+    function setEmployeeWage(empId, newWage) {
+      const employee = state.employees.find(e => e.id === empId);
+      if (!employee) return;
+      const parsed = Number(newWage);
+      if (Number.isNaN(parsed)) return;
+      const clamped = Math.min(110, Math.max(60, Math.floor(parsed)));
+      employee.dailyRate = clamped;
+      addLog(`💲 ${employee.name} wage updated to $${clamped}/day.`);
+      render();
+    }
+
+    function fireEmployee(empId) {
+      const idx = state.employees.findIndex(e => e.id === empId);
+      if (idx === -1) return;
+      const [removed] = state.employees.splice(idx, 1);
+      addLog(`🟥 ${removed.name} fired.`);
+      render();
+    }
+
+    function finishCheck(job, byWho) {
+      if (!job.completed && job.progress >= job.required) {
+        job.progress = job.required;
+        job.completed = true;
+        job.ownerWorking = false;
+        state.money += job.payout;
+        addLog(`✅ ${job.customer} finished by ${byWho}. +$${job.payout}`);
+      }
+    }
+
+    function nextDay() {
+      if (state.gameOver) return;
+      state.day += 1;
+      const wages = totalWages();
+      state.money -= wages;
+      addLog(`Paid daily wages (+$10 bonus per employee): $${wages}.`);
+      if (state.money < 0) {
+        state.gameOver = true;
+        addLog('💥 Company bankrupt. Refresh to restart.');
+      }
+      render();
+    }
+
+    function tick() {
+      if (state.gameOver) return;
+      let changed = false;
+
+      state.employees.forEach(emp => {
+        if (emp.assignedJobId) return;
+        const job = state.jobs.find(j => !j.completed
+          && j.taskKey === emp.roleTask
+          && !state.employees.some(other => other.assignedJobId === j.id));
+        if (!job) return;
+        emp.assignedJobId = job.id;
+        addLog(`✅ ${emp.name} auto-assigned to ${job.customer} (${job.taskLabel}).`);
+        changed = true;
+      });
+
+      state.employees.forEach(emp => {
+        if (!emp.assignedJobId) return;
+        const job = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed);
+        if (!job) {
+          emp.assignedJobId = null;
+          changed = true;
+          return;
+        }
+
+        job.progress += emp.workPerSecond;
+        changed = true;
+        finishCheck(job, emp.name);
+      });
+
+      state.jobs.forEach(job => {
+        if (job.completed) return;
+        const occupiedByEmployee = state.employees.some(emp => emp.assignedJobId === job.id);
+        job.ownerWorking = !occupiedByEmployee;
+        if (job.ownerWorking) {
+          job.progress += 2;
+          changed = true;
+          finishCheck(job, 'you');
+        }
+      });
+
+      if (changed) render(false);
+    }
+
+    function toggleMusic() {
+      if (uploadedAudio) {
+        if (uploadedAudio.paused) {
+          uploadedAudio.play();
+          refs.musicBtn.textContent = 'Pause Background Music';
+        } else {
+          uploadedAudio.pause();
+          refs.musicBtn.textContent = 'Play Background Music';
+        }
+        return;
+      }
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const master = audioCtx.createGain();
+        master.gain.value = 0.035;
+        master.connect(audioCtx.destination);
+
+        const oscA = audioCtx.createOscillator();
+        const oscB = audioCtx.createOscillator();
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        const lowPass = audioCtx.createBiquadFilter();
+
+        oscA.type = 'sine';
+        oscB.type = 'sawtooth';
+        oscA.frequency.value = 196;
+        oscB.frequency.value = 247;
+        lfo.frequency.value = 0.08;
+        lfoGain.gain.value = 22;
+
+        lowPass.type = 'lowpass';
+        lowPass.frequency.value = 850;
+        lowPass.Q.value = 1;
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(oscA.frequency);
+
+        oscA.connect(lowPass);
+        oscB.connect(lowPass);
+        lowPass.connect(master);
+
+        oscA.start();
+        oscB.start();
+        lfo.start();
+
+        musicNodes = { oscA, oscB, lfo, lowPass };
+      }
+
+      if (audioCtx.state === 'running') {
+        audioCtx.suspend();
+        refs.musicBtn.textContent = 'Play Background Music';
+      } else {
+        audioCtx.resume();
+        refs.musicBtn.textContent = 'Pause Background Music';
+      }
+    }
+
+    function renderEmployees() {
+      if (!state.employees.length) {
+        refs.employees.innerHTML = '<p class="small">No employees hired yet.</p>';
+        return;
+      }
+
+      refs.employees.innerHTML = state.employees.map(emp => {
+        const assigned = state.jobs.find(j => j.id === emp.assignedJobId && !j.completed);
+        return `
+          <div class="emp-item">
+            <div class="row">
+              <div style="display:flex; align-items:center; gap:.45rem;">
+                <strong>${emp.name}</strong>
+                <button class="fire-btn" data-fire="${emp.id}" title="Fire Employee">X</button>
+              </div>
+              <span class="chip">$${emp.dailyRate}/day + $10 bonus</span>
+            </div>
+            <div class="small">Field of work: <strong>${emp.roleName}</strong></div>
+            <div class="small">Assigned: ${assigned ? `${assigned.customer} (${assigned.taskLabel})` : 'Waiting for matching request...'}</div>
+            <button class="wage-toggle" data-open-wage="${emp.id}">Wage Deduction</button>
+            <div class="wage-panel" id="wage-panel-${emp.id}">
+              <input id="wage-${emp.id}" type="number" min="60" max="110" value="${emp.dailyRate}" />
+              <button data-set-wage="${emp.id}" style="margin:0;">Send</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      refs.employees.querySelectorAll('[data-fire]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          fireEmployee(Number(btn.dataset.fire));
+        });
+      });
+
+      refs.employees.querySelectorAll('[data-set-wage]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const empId = Number(btn.dataset.setWage);
+          const input = document.getElementById(`wage-${empId}`);
+          setEmployeeWage(empId, input.value);
+        });
+      });
+
+      refs.employees.querySelectorAll('[data-open-wage]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const empId = Number(btn.dataset.openWage);
+          const panel = document.getElementById(`wage-panel-${empId}`);
+          panel.classList.toggle('open');
+        });
+      });
+    }
+
+    function renderJobs() {
+      const open = getOpenJobs();
+      if (!open.length) {
+        refs.jobs.innerHTML = '<p class="small">No open jobs. Get a new request.</p>';
+        return;
+      }
+
+      refs.jobs.innerHTML = open.map(job => {
+        const p = totalProgress(job);
+        const left = Math.max(0, Math.ceil(job.required - job.progress));
+        return `
+          <div class="job-item">
+            <div class="row">
+              <strong>${job.customer}</strong>
+              <span class="chip">Pays $${job.payout}</span>
+            </div>
+            <div class="small"><strong>Only task:</strong> ${job.taskLabel}</div>
+            <div class="small"><strong>Estimated total time:</strong> ${job.estSeconds}s</div>
+            <ul class="tasks">
+              <li>${job.taskLabel}: ${Math.floor(job.progress)}/${job.required} (${left} left)</li>
+            </ul>
+            <div class="progress-row">Total Progress: ${Math.floor(p.done)}/${p.total} (${p.pct}%)</div>
+            <div class="small">${job.ownerWorking ? 'You are servicing this request automatically.' : 'Employee is servicing this request.'}</div>
+            <progress max="${p.total}" value="${p.done}"></progress>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function render(full = true) {
+      refs.day.textContent = String(state.day);
+      refs.money.textContent = `$${state.money}`;
+      refs.wages.textContent = `Wages: $${totalWages()}`;
+      refs.employeeCount.textContent = String(state.employees.length);
+      refs.openJobs.textContent = String(getOpenJobs().length);
+
+      refs.statusMsg.textContent = getOpenJobs().length
+        ? 'You can run multiple jobs at the same time.'
+        : 'Create a new request to begin.';
+
+      if (full) renderEmployees();
+      renderJobs();
+
+      [refs.newRequestBtn, refs.hireBtn, refs.nextDayBtn].forEach(btn => {
+        btn.disabled = state.gameOver;
+      });
+    }
+
+    function restartProgress() {
+      state.day = 1;
+      state.money = 250;
+      state.jobs = [];
+      state.employees = [];
+      state.jobCounter = 1;
+      state.workerCounter = 1;
+      state.gameOver = false;
+      localStorage.removeItem(SAVE_KEY);
+      refs.log.innerHTML = '';
+      addLog('🔄 Progress restarted. Fresh game started.');
+      render(true);
+    }
+
+    refs.newRequestBtn.addEventListener('click', createRequest);
+    refs.hireBtn.addEventListener('click', hireEmployee);
+    refs.nextDayBtn.addEventListener('click', nextDay);
+    refs.musicBtn.addEventListener('click', toggleMusic);
+    refs.pickMusicBtn.addEventListener('click', () => refs.musicFile.click());
+    refs.saveBtn.addEventListener('click', () => {
+      const snapshot = buildSnapshot();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lawn-owner-save.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      addLog(`💾 Saved full game state locally + downloaded save file.`);
+    });
+    refs.loadBtn.addEventListener('click', () => refs.loadSaveFile.click());
+    refs.restartBtn.addEventListener('click', () => {
+      const ok = window.confirm('Are you sure you want to restart all progress? (Yes = restart, No = keep current game)');
+      if (ok) restartProgress();
+    });
+    refs.loadSaveFile.addEventListener('change', async () => {
+      const file = refs.loadSaveFile.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        applySnapshot(data);
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+        addLog(`💾 Loaded full state from save file.`);
+      } catch (err) {
+        addLog('⚠️ Failed to load save file.');
+      } finally {
+        refs.loadSaveFile.value = '';
+      }
+    });
+    refs.musicFile.addEventListener('change', () => {
+      const file = refs.musicFile.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('audio/')) {
+        addLog('⚠️ Invalid file type. Please upload an audio file.');
+        refs.musicFile.value = '';
+        return;
+      }
+      if (file.size > 60000 * 1024) {
+        addLog('⚠️ File too large. Please use an audio file under 60000 KB.');
+        refs.musicFile.value = '';
+        return;
+      }
+      if (uploadedAudio) {
+        uploadedAudio.pause();
+      }
+      if (uploadedAudioUrl) {
+        URL.revokeObjectURL(uploadedAudioUrl);
+      }
+      uploadedAudioUrl = URL.createObjectURL(file);
+      uploadedAudio = new Audio(uploadedAudioUrl);
+      uploadedAudio.loop = true;
+      uploadedAudio.volume = 0.35;
+      refs.musicBtn.textContent = 'Play Background Music';
+      addLog(`Loaded custom song: ${file.name}`);
+    });
+
+    (() => {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        applySnapshot(data);
+        addLog(`💾 Loaded saved game with ${state.employees.length} employees and ${getOpenJobs().length} open jobs.`);
+      } catch (err) {
+        console.warn('Failed to load save', err);
+      }
+    })();
+
+    addLog('Welcome owner! Jobs now use single-task requests and role-based acceptance.');
+    render();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
