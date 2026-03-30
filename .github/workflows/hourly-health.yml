@@ -28,3 +28,25 @@ jobs:
           grep -q 'id="saveBtn"' index.html
           grep -q 'id="loadBtn"' index.html
           grep -q 'id="restartBtn"' index.html
+
+      - name: Verify embedded JavaScript parses
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>([\s\S]*?)</script>', html)
+          if not scripts:
+              raise SystemExit('No inline <script> block found in index.html')
+
+          Path('ci-inline-script.js').write_text('\n\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check ci-inline-script.js
+          rm -f ci-inline-script.js
+
+      - name: Verify expected game actions exist
+        run: |
+          grep -q 'function createRequest()' index.html
+          grep -q 'function hireEmployee()' index.html
+          grep -q 'function nextDay()' index.html
