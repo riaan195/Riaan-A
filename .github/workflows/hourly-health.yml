@@ -1,0 +1,30 @@
+name: Hourly Health Check
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify main game file exists and is non-empty
+        run: |
+          test -s index.html
+
+      - name: Verify no unresolved merge conflict markers
+        run: |
+          if grep -nE '^(<<<<<<<|=======|>>>>>>>)' index.html; then
+            echo "Found merge conflict markers in index.html"
+            exit 1
+          fi
+
+      - name: Verify key UI controls exist
+        run: |
+          grep -q 'id="saveBtn"' index.html
+          grep -q 'id="loadBtn"' index.html
+          grep -q 'id="restartBtn"' index.html
